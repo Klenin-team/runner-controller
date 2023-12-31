@@ -13,7 +13,8 @@ async fn main() {
         cores::start_process(3, rx).await;
     });
     let tests = LinkedList::from([
-        structs::Test { input: "12", output: "12" }
+        structs::Test { input: "12\n", output: "12" },
+        structs::Test { input: "12\n", output: "13" }
     ]);
     let language = structs::Language {
         filename: "solution.py",
@@ -22,7 +23,7 @@ async fn main() {
         execute_command: vec!["/usr/bin/python"]
     };
     let solution = structs::Solve {
-        code: "__import__('time').sleep(100)",
+        code: "print(input())",
         stdio: true,
         input_name: "",
         output_name: "",

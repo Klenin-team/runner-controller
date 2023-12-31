@@ -12,8 +12,8 @@ Actually, I'm not sure how sunwalker-box working inside, but currently this cont
 ## To do list
 - [ ] compiling
 - [x] running compiled code
-- [ ] catching exceeding limits
-- [ ] checking output
+- [x] catching exceeding limits
+- [x] checking output
 - [ ] configuration files
 - [ ] connection to backend with tasks
 - [ ] **comments**

@@ -20,7 +20,7 @@ pub async fn start_process(core: u8, mut rx: Receiver<structs::Solve>) {
         } else {
             // Run tests
             for test in solution.tests.iter() {
-                tester.run_test(&solution, test).await;
+                println!("{}", tester.run_test(&solution, test).await);
             }
         }
 

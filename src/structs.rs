@@ -29,3 +29,17 @@ pub enum Verdicts {
     WA,
     CE
 }
+
+impl std::fmt::Display for Verdicts {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Verdicts::OK => write!(f, "OK"),
+            Verdicts::RE => write!(f, "RE"),
+            Verdicts::TL => write!(f, "TL"),
+            Verdicts::ML => write!(f, "ML"),
+            Verdicts::WA => write!(f, "WA"),
+            Verdicts::CE => write!(f, "CE")
+        }
+    }
+}
+

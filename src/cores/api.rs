@@ -62,7 +62,7 @@ impl Api {
         for i in answer.members() {
             answer_arr.push(i.as_u8().expect("not u8"));
         }
-        let out = str::from_utf8(answer_arr.as_slice().clone()).expect("whoops").to_owned();
+        let out = str::from_utf8(answer_arr.as_slice()).expect("whoops").to_owned();
         out
     }
 

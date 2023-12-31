@@ -32,11 +32,19 @@ impl Tester {
         command.push(solution.language.filename);
 
         let answer = self.api.run(command, Some(solution.stdio), None, None).await;
+
         if answer["limit_verdict"] == "RealTimeLimitExceeded" {
             return Verdicts::TL;
+        } else if answer["limit_verdict"] == "MemoryLimitExceeded" {
+            return Verdicts::ML;
+        } else if answer["exit_code"] != 0 {
+            return Verdicts::RE;
         }
-        println!("{}", answer.dump());
-        println!("{}",  self.api.read_file("errput.txt").await);
+        
+        let command_output = self.api.read_file(output_name).await;
+        if command_output.trim() != test.output {
+            return Verdicts::WA;
+        }
 
         Verdicts::OK
     }
