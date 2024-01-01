@@ -28,8 +28,7 @@ impl Tester {
         self.api.create_file(&output_name, test.output).await;
 
 
-        let mut command = solution.language.execute_command.clone();
-        command.push(solution.language.filename);
+        let command = solution.language.execute_command.clone();
 
         let answer = self.api.run(command, Some(solution.stdio), None, None).await;
 

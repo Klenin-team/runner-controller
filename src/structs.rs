@@ -1,5 +1,8 @@
 use std::collections::LinkedList;
 
+pub mod languages;
+
+#[derive(Clone)]
 pub struct Language {
     pub filename: &'static str,
     pub compilible: bool,
