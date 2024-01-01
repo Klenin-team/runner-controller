@@ -119,6 +119,14 @@ impl Api {
         self.stdin.write(b" ").await.expect("write error");
         self.stdin.write(data.dump().as_bytes()).await.expect("write error");
         self.stdin.write(b"\n").await.expect("write error");
-        self.reader.next_line().await.expect("nope").unwrap()
+        let answer = self.reader.next_line().await.expect("nope").unwrap();
+        if answer.starts_with("error") {
+            println!("❌ \x1b[31msunwalker reterned error\x1b[0m");
+            println!("\x1b[1mCommand: \x1b[0m{} {}", command, data.dump());
+            println!("\x1b[1mAnswer:\x1b[0m {}", answer);
+            println!("\x1b[1mThis tread going to \x1b[91mp\x1b[96ma\x1b[93mn\x1b[94mi\x1b[95mc\x1b[0m");
+            panic!();
+        }
+        answer
     }
 }
