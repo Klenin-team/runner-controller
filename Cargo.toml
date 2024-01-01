@@ -10,4 +10,5 @@ config = { version = "0.13.4", features = [ "yaml" ] }
 json = "0.12.4"
 tokio = { version = "1.35.1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
+reqwest = "0.11.23"
 

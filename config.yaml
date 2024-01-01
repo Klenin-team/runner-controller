@@ -1,5 +1,6 @@
 cores:
   - 3
 queue_base_url: http://meow.meow/meow/
+queue_poll_interval: 10
 max_time: 10
 max_memory: 128000000
