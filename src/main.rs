@@ -1,9 +1,8 @@
-use std::collections::{LinkedList, HashMap};
-use tokio::sync::mpsc::Sender;
+use std::collections::{ LinkedList, HashMap };
+use tokio::sync::{ mpsc, oneshot };
 
 use config::Config;
 use tokio::time::{sleep, Duration};
-use tokio::sync::mpsc;
 
 mod cores;
 mod structs;
@@ -23,9 +22,9 @@ async fn main() {
     let languages = structs::languages::set_languages();
 
 
-    let mut senders: HashMap<u8, Sender<structs::Solve>> = HashMap::new();
+    let mut senders: HashMap<u8, mpsc::Sender<(structs::Solve, oneshot::Sender<Vec<structs::Verdicts>>)>> = HashMap::new();
     for core in run_on_cores {
-        let (tx, rx) = mpsc::channel::<structs::Solve>(1);
+        let (tx, rx) = mpsc::channel::<(structs::Solve, oneshot::Sender<Vec<structs::Verdicts>>)>(1);
         tokio::spawn(async move {
             cores::start_process(core, rx).await;
         });
@@ -34,6 +33,7 @@ async fn main() {
     }
 
     // Python
+    let (resp_tx, resp_rx) = oneshot::channel();
     let tests = LinkedList::from([
         structs::Test { input: "12", output: "12" },
         structs::Test { input: "12", output: "13" }
@@ -47,9 +47,12 @@ async fn main() {
         tests,
         language
     };
-    senders.get(&3).expect("hey!").send(solution).await.expect("");
+    senders.get(&3).expect("hey!").send((solution, resp_tx)).await.expect("");
+    let verdicts = resp_rx.await;
+    println!("{:?}", verdicts);
 
     // Compile error c
+    let (resp_tx, resp_rx) = oneshot::channel();
     let tests = LinkedList::from([
         structs::Test { input: "12", output: "12" },
         structs::Test { input: "12", output: "13" }
@@ -63,9 +66,12 @@ async fn main() {
         tests,
         language
     };
-    senders.get(&3).expect("hey!").send(solution).await.expect("");
+    senders.get(&3).expect("hey!").send((solution, resp_tx)).await.expect("");
+    let verdicts = resp_rx.await;
+    println!("{:?}", verdicts);
 
     // C
+    let (resp_tx, resp_rx) = oneshot::channel();
     let tests = LinkedList::from([
         structs::Test { input: "12", output: "12" },
         structs::Test { input: "12", output: "13" }
@@ -85,7 +91,9 @@ int main() {
         tests,
         language
     };
-    senders.get(&3).expect("hey!").send(solution).await.expect("");
+    senders.get(&3).expect("hey!").send((solution, resp_tx)).await.expect("");
+    let verdicts = resp_rx.await;
+    println!("{:?}", verdicts);
 
 
     sleep(Duration::from_millis(15000)).await;

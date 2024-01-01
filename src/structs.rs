@@ -24,6 +24,7 @@ pub struct Solve {
     pub language: Language
 }
 
+#[derive(Debug)]
 pub enum Verdicts {
     OK,
     RE,
