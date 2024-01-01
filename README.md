@@ -10,10 +10,10 @@ Actually, I'm not sure how sunwalker-box working inside, but currently this cont
 - [sunwalker-box](https://github.com/purplesyringa/sunwalker-box) (added to `$PATH`)
 
 ## To do list
-- [ ] compiling
+- [x] compiling
 - [x] running compiled code
 - [x] catching exceeding limits
 - [x] checking output
-- [ ] configuration files
+- [x] configuration files (partially, supported languages are hardcoded (but can be easely edited at src/structs/languages.rs))
 - [ ] connection to backend with tasks
 - [ ] **comments**

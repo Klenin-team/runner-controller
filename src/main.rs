@@ -30,20 +30,63 @@ async fn main() {
             cores::start_process(core, rx).await;
         });
         senders.insert(core, tx);
-        let tests = LinkedList::from([
-            structs::Test { input: "12", output: "12" },
-            structs::Test { input: "12", output: "13" }
-        ]);
-        let language = (languages.get("python").expect("no python((((")).clone();
-        let solution = structs::Solve {
-            code: "print(input())",
-            stdio: true,
-            input_name: "",
-            output_name: "",
-            tests,
-            language
-        };
-        senders.get(&core).expect("hey!").send(solution).await.expect("");
+
     }
+
+    // Python
+    let tests = LinkedList::from([
+        structs::Test { input: "12", output: "12" },
+        structs::Test { input: "12", output: "13" }
+    ]);
+    let language = (languages.get("python").expect("no python((((")).clone();
+    let solution = structs::Solve {
+        code: "print(input())",
+        stdio: true,
+        input_name: "",
+        output_name: "",
+        tests,
+        language
+    };
+    senders.get(&3).expect("hey!").send(solution).await.expect("");
+
+    // Compile error c
+    let tests = LinkedList::from([
+        structs::Test { input: "12", output: "12" },
+        structs::Test { input: "12", output: "13" }
+    ]);
+    let language = (languages.get("gcc").expect("no python((((")).clone();
+    let solution = structs::Solve {
+        code: "print(input())",
+        stdio: true,
+        input_name: "",
+        output_name: "",
+        tests,
+        language
+    };
+    senders.get(&3).expect("hey!").send(solution).await.expect("");
+
+    // C
+    let tests = LinkedList::from([
+        structs::Test { input: "12", output: "12" },
+        structs::Test { input: "12", output: "13" }
+    ]);
+    let language = (languages.get("gcc").expect("no python((((")).clone();
+    let solution = structs::Solve {
+        code: "#include <stdio.h>
+int main() {
+    int a;
+    scanf(\"%d\", &a);
+    printf(\"%d\", a);
+    return 0;
+}",
+        stdio: true,
+        input_name: "",
+        output_name: "",
+        tests,
+        language
+    };
+    senders.get(&3).expect("hey!").send(solution).await.expect("");
+
+
     sleep(Duration::from_millis(15000)).await;
 }

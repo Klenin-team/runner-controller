@@ -43,6 +43,15 @@ impl Api {
         }
     }
 
+    pub async fn create_raw_file(&mut self, filename: &str, file: Vec<u8>, mode: Option<u32>) {
+        let data = object! {
+            path: format!("/space/{}", filename),
+            content: file,
+            mode: mode.unwrap_or(664)
+        };
+        self.submit_and_await("mkfile", data).await;
+    }
+
     pub async fn create_file(&mut self, filename: &str, file: &str) {
         let data = object! {
             path: format!("/space/{}", filename),
@@ -50,8 +59,8 @@ impl Api {
         };
         self.submit_and_await("mkfile", data).await;
     }
-
-    pub async fn read_file(&mut self, filename: &str) -> String {
+    
+    pub async fn raw_read_file(&mut self, filename: &str) -> Vec<u8> {
         let data = object! {
             path: format!("/space/{}", filename),
             at: 0,
@@ -61,9 +70,24 @@ impl Api {
         let mut answer_arr = Vec::new();
         for i in answer.members() {
             answer_arr.push(i.as_u8().expect("not u8"));
-        }
-        let out = str::from_utf8(answer_arr.as_slice()).expect("whoops").to_owned();
+            
+        };
+        answer_arr
+    }
+
+    pub async fn read_file(&mut self, filename: &str) -> String {
+        let file = self.raw_read_file(filename).await;
+        let out = str::from_utf8(file.as_slice()).expect("whoops").to_owned();
         out
+    }
+
+    pub async fn check_for_file(&mut self, filename: &str) -> bool {
+        let data = object! {
+            path: format!("/space/{}", filename),
+            at: 0,
+            len: 0
+        };
+        self.submit_and_await("cat", data).await.starts_with("ok")
     }
 
     pub async fn run(&mut self, command: Vec<&'static str>, redirect_stdio: Option<bool>,
@@ -80,12 +104,15 @@ impl Api {
         if redirect_stdio {
             data["stdin"] = "/space/input.txt".into();
             data["stdout"] = "/space/output.txt".into();
-            data["stderr"] = "/space/errput.txt".into();
         }
+        data["stderr"] = "/space/errput.txt".into();
         let out = self.submit_and_await("run", data).await;
         json::parse(&out[3..]).unwrap()
     }
 
+    pub async fn reset(&mut self) {
+        self.submit_and_await("reset", object! {}).await;
+    }
 
     async fn submit_and_await(&mut self, command: &str, data: JsonValue) -> String {
         self.stdin.write(command.as_bytes()).await.expect("write error");
