@@ -50,14 +50,15 @@ pub fn json_to_solution(text: &str, languages: &HashMap<&str, structs::Language>
 }
 
 pub async fn run(
-        sender: &mpsc::Sender<(structs::Solve, oneshot::Sender<Vec<structs::Verdicts>>)>, 
+        sender: &mpsc::Sender<(structs::Solve, oneshot::Sender<Vec<structs::Verdict>>)>, 
         solution: structs::Solve, freed_core_tx: mpsc::Sender<u8>, using_core: u8,
         queue_base_url: String, id: u128) {
     let (resp_tx, resp_rx) = oneshot::channel();
     let res = sender.send((solution, resp_tx)).await;
     if res.is_err() {
         tokio::spawn(async move {
-            send_back_results(vec![structs::Verdicts::SE], Some(freed_core_tx), Some(using_core), 
+            send_back_results(vec![structs::Verdict{ used_time: 0, used_memory: 0, verdict: structs::Verdicts::SE }],
+                              Some(freed_core_tx), Some(using_core), 
                               queue_base_url, id).await;
         });
         return ();
@@ -66,7 +67,8 @@ pub async fn run(
         let verdicts = resp_rx.await;
 
         if verdicts.is_err() {
-            send_back_results(vec![structs::Verdicts::SE], Some(freed_core_tx), Some(using_core),
+            send_back_results(vec![structs::Verdict{ used_time: 0, used_memory: 0, verdict: structs::Verdicts::SE }],
+                              Some(freed_core_tx), Some(using_core),
                               queue_base_url, id).await;
             return ();
         }
@@ -75,7 +77,7 @@ pub async fn run(
     });
 }
 
-pub async fn send_back_results(verdicts: Vec<structs::Verdicts>,
+pub async fn send_back_results(verdicts: Vec<structs::Verdict>,
                                freed_core_tx: Option<mpsc::Sender<u8>>, using_core: Option<u8>,
                                queue_base_url: String, id: u128) {
     if freed_core_tx.is_some() && using_core.is_some() {
@@ -84,14 +86,18 @@ pub async fn send_back_results(verdicts: Vec<structs::Verdicts>,
 
     let mut string_verdicts = Vec::new();
     for verdict in verdicts {
-        string_verdicts.push(match verdict {
-            structs::Verdicts::OK => "OK",
-            structs::Verdicts::RE => "RE",
-            structs::Verdicts::TL => "TL",
-            structs::Verdicts::ML => "ML",
-            structs::Verdicts::WA => "WA",
-            structs::Verdicts::CE => "CE",
-            structs::Verdicts::SE => "SE"
+        string_verdicts.push(object! {
+            used_memory: verdict.used_memory,
+            used_time: verdict.used_time,
+            verdict: match verdict.verdict {
+                structs::Verdicts::OK => "OK",
+                structs::Verdicts::RE => "RE",
+                structs::Verdicts::TL => "TL",
+                structs::Verdicts::ML => "ML",
+                structs::Verdicts::WA => "WA",
+                structs::Verdicts::CE => "CE",
+                structs::Verdicts::SE => "SE"
+            }
         });
     }
 

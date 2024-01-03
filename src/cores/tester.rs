@@ -1,4 +1,4 @@
-use crate::structs::{Solve, Verdicts, Test};
+use crate::structs::{Solve, Verdicts, Test, Verdict};
 
 use super::api::Api;
 
@@ -22,7 +22,7 @@ impl Tester {
     }
     
 
-    pub async fn run_test(&mut self, solution: &Solve, test: &Test, compiled: Option<Vec<u8>>) -> Verdicts {
+    pub async fn run_test(&mut self, solution: &Solve, test: &Test, compiled: Option<Vec<u8>>) -> Verdict {
         let mut input_name = solution.input_name.as_str();
         let mut output_name = solution.output_name.as_str();
         if solution.stdio {
@@ -45,18 +45,38 @@ impl Tester {
         self.api.reset().await;
 
         if answer["limit_verdict"] == "RealTimeLimitExceeded" {
-            return Verdicts::TL;
+            return Verdict { 
+                used_memory: answer["memory"].as_u64().unwrap_or(0),
+                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                verdict: Verdicts::TL
+            }
         } else if answer["limit_verdict"] == "MemoryLimitExceeded" {
-            return Verdicts::ML;
+            return Verdict { 
+                used_memory: answer["memory"].as_u64().unwrap_or(0),
+                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                verdict: Verdicts::ML
+            }
         } else if answer["exit_code"] != 0 {
-            return Verdicts::RE;
+            return Verdict { 
+                used_memory: answer["memory"].as_u64().unwrap_or(0),
+                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                verdict: Verdicts::RE
+            }
         }
         
         if command_output.trim() != test.output {
-            return Verdicts::WA;
+            return Verdict { 
+                used_memory: answer["memory"].as_u64().unwrap_or(0),
+                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                verdict: Verdicts::WA
+            }
         }
 
-        Verdicts::OK
+        Verdict { 
+                used_memory: answer["memory"].as_u64().unwrap_or(0),
+                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                verdict: Verdicts::OK
+            }
     }
 
     pub async fn compile(&mut self, solution: &Solve) -> (bool, Vec<u8>) {

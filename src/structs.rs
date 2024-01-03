@@ -25,6 +25,13 @@ pub struct Solve {
 }
 
 #[derive(Debug)]
+pub struct Verdict {
+    pub used_memory: u64,
+    pub used_time: u32,
+    pub verdict: Verdicts,
+}
+
+#[derive(Debug)]
 pub enum Verdicts {
     OK,
     RE,

@@ -1,4 +1,4 @@
-use std::{collections::{ LinkedList, HashMap }, borrow::Borrow};
+use std::{collections::HashMap, borrow::Borrow};
 use controller::json_to_solution;
 use tokio::sync::{ mpsc, oneshot };
 
@@ -27,9 +27,9 @@ async fn main() {
 
     let mut free_cores = run_on_cores.clone();
 
-    let mut senders: HashMap<u8, mpsc::Sender<(structs::Solve, oneshot::Sender<Vec<structs::Verdicts>>)>> = HashMap::new();
+    let mut senders: HashMap<u8, mpsc::Sender<(structs::Solve, oneshot::Sender<Vec<structs::Verdict>>)>> = HashMap::new();
     for core in run_on_cores {
-        let (tx, rx) = mpsc::channel::<(structs::Solve, oneshot::Sender<Vec<structs::Verdicts>>)>(1);
+        let (tx, rx) = mpsc::channel::<(structs::Solve, oneshot::Sender<Vec<structs::Verdict>>)>(1);
         tokio::spawn(async move {
             cores::start_process(core, rx).await;
         });
@@ -55,7 +55,8 @@ async fn main() {
             let solution_and_id = json_to_solution(res.text().await.expect("").borrow(), &languages);
             if solution_and_id.is_err() {
                 tokio::spawn(async move {
-                    controller::send_back_results(vec![structs::Verdicts::SE], None, None,
+                    controller::send_back_results(vec![structs::Verdict{ used_time: 0, used_memory: 0, verdict: structs::Verdicts::SE }], 
+                                                  None, None,
                                                   queue_base_url, 0).await;
                 });
                 break;
