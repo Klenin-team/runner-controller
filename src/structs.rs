@@ -31,7 +31,8 @@ pub enum Verdicts {
     TL,
     ML,
     WA,
-    CE
+    CE,
+    SE
 }
 
 impl std::fmt::Display for Verdicts {
@@ -42,8 +43,10 @@ impl std::fmt::Display for Verdicts {
             Verdicts::TL => write!(f, "TL"),
             Verdicts::ML => write!(f, "ML"),
             Verdicts::WA => write!(f, "WA"),
-            Verdicts::CE => write!(f, "CE")
+            Verdicts::CE => write!(f, "CE"),
+            Verdicts::SE => write!(f, "SE"),
         }
     }
 }
+
 

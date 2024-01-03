@@ -1,13 +1,13 @@
-use std::{collections::{ LinkedList, HashMap }, borrow::Borrow, iter::zip};
-use json::JsonValue;
+use std::{collections::{ LinkedList, HashMap }, borrow::Borrow};
+use controller::json_to_solution;
 use tokio::sync::{ mpsc, oneshot };
 
 use config::Config;
 use tokio::time::{sleep, Duration};
 
 mod cores;
+mod controller;
 mod structs;
-mod queue_parser;
 
 #[tokio::main]
 async fn main() {
@@ -22,10 +22,10 @@ async fn main() {
 
     let run_on_cores = settings.get::<Vec<u8>>("cores").expect("No cores specified in config file");
     let queue_base_url = settings.get::<String>("queue_base_url").expect("No queue specified in config file");
-    let queue_poll_interval = settings.get::<u64>("queue_poll_interval").expect("No queue poll interval specified in config file");
+    let queue_poll_interval = settings.get::<u64>("queue_poll_interval").unwrap_or(10);
     let languages = structs::languages::set_languages();
 
-    let free_cores = run_on_cores.clone();
+    let mut free_cores = run_on_cores.clone();
 
     let mut senders: HashMap<u8, mpsc::Sender<(structs::Solve, oneshot::Sender<Vec<structs::Verdicts>>)>> = HashMap::new();
     for core in run_on_cores {
@@ -36,56 +36,38 @@ async fn main() {
         senders.insert(core, tx);
     }
 
+    let total_cores = free_cores.capacity();
+    let (freed_core_tx, mut freed_core_rx) = mpsc::channel::<u8>(total_cores);
+
     loop {
+        let mut freed_core = freed_core_rx.try_recv();
+        while freed_core.is_ok() {
+            free_cores.push(freed_core.unwrap());
+            freed_core = freed_core_rx.try_recv()
+        }
         while free_cores.is_empty() == false {
-            let res = reqwest::get(queue_base_url.to_string() + "/solution").await.expect("Seems like no internet");
+            let queue_base_url = queue_base_url.clone();
+            let res = reqwest::get(queue_base_url.to_string() + "/solution").await.expect("Seems like queue unreachable");
             if res.status() != 200 {
-                // TODO: return ServerError
+                // Seems like the queue is down
                 break;
             }
-            let json = json::parse(res.text().await.expect("").borrow()).expect("");
-            if json["any"] == false {
+            let solution_and_id = json_to_solution(res.text().await.expect("").borrow(), &languages);
+            if solution_and_id.is_err() {
+                tokio::spawn(async move {
+                    controller::send_back_results(vec![structs::Verdicts::SE], None, None,
+                                                  queue_base_url, 0).await;
+                });
                 break;
             }
-
-            let id = json["id"].to_string();
-            let id = id.parse::<u128>();
-            if id.is_err() {
-                break; // We do not have the proper ID
-                       // Probably, the queue is empty
-            }
-            let id = id.unwrap();
-
-            let code = json["code"].to_string();
-
-            let language = json["language"].to_string();
-            let language_as_struct = languages.get(language.as_str());
-            if language_as_struct.is_none() {
-                // TODO: return ServerError
-                break;
-            }
-            let language_as_struct = language_as_struct.unwrap();
-            
-            let use_stdio = json["stdio"].as_bool().unwrap_or(true);
-            let input_file = json["input_file"].to_string();
-            let output_file = json["output_file"].to_string();
-
-            
-            let mut tests_list: LinkedList<structs::Test> = LinkedList::new();
-            for json_test in json["tests"].members() {
-                tests_list.push_back(structs::Test { input: json_test[0].to_string(), output: json_test[0].to_string() })
-            }
-
-            let solution = structs::Solve{
-                code,
-                stdio: use_stdio,
-                input_name: input_file,
-                output_name: output_file,
-                tests: tests_list,
-                language: language_as_struct.clone()
-            };
-            
+            let (id, solution) = solution_and_id.unwrap();
+            let available_core = free_cores.pop().unwrap();
+            controller::run(
+                senders.get(&available_core).unwrap(), solution, freed_core_tx.clone(), 
+                available_core, queue_base_url, id
+            ).await;
         }
         sleep(Duration::from_secs(queue_poll_interval)).await;
     }
+
 }
