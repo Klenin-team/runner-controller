@@ -23,25 +23,25 @@ impl Tester {
     
 
     pub async fn run_test(&mut self, solution: &Solve, test: &Test, compiled: Option<Vec<u8>>) -> Verdicts {
-        let mut input_name = solution.input_name;
-        let mut output_name = solution.output_name;
+        let mut input_name = solution.input_name.as_str();
+        let mut output_name = solution.output_name.as_str();
         if solution.stdio {
             input_name = "input.txt";
             output_name = "output.txt";
         }
-        self.api.create_file(&input_name, test.input).await;
-        self.api.create_file(&output_name, test.output).await;
+        self.api.create_file(&input_name, &test.input).await;
+        self.api.create_file(&output_name, &test.output).await;
 
         if compiled.is_some() {
             self.put_compiled_code(compiled.unwrap()).await;
         } else {
-            self.put_code(solution.code, solution.language.filename).await;
+            self.put_code(&solution.code, solution.language.filename).await;
         }
 
         let command = solution.language.execute_command.clone();
 
         let answer = self.api.run(command, Some(solution.stdio), None, None).await;
-        let command_output = self.api.read_file(output_name).await;
+        let command_output = self.api.read_file(&output_name).await;
         self.api.reset().await;
 
         if answer["limit_verdict"] == "RealTimeLimitExceeded" {
@@ -60,7 +60,7 @@ impl Tester {
     }
 
     pub async fn compile(&mut self, solution: &Solve) -> (bool, Vec<u8>) {
-        self.put_code(solution.code, solution.language.filename).await;
+        self.put_code(&solution.code, solution.language.filename).await;
         self.api.create_file("input.txt", "").await;
         let command = solution.language.compile_command.clone();
 

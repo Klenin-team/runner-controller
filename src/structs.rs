@@ -11,15 +11,15 @@ pub struct Language {
 }
 
 pub struct Test {
-    pub input: &'static str,
-    pub output: &'static str
+    pub input: String,
+    pub output: String
 }
 
 pub struct Solve {
-    pub code: &'static str,
+    pub code: String,
     pub stdio: bool,
-    pub input_name: &'static str,
-    pub output_name: &'static str,
+    pub input_name: String,
+    pub output_name: String,
     pub tests: LinkedList<Test>,
     pub language: Language
 }
