@@ -3,3 +3,5 @@ cores:
 queue_base_url: http://127.0.0.1:8083/
 queue_poll_interval: 1
 max_time: 10
+sunwalker_path: ./sunwalker_box
+root: ./runnerchroot/

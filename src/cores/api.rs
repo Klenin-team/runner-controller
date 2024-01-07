@@ -1,4 +1,5 @@
 use json::{object, JsonValue};
+use config::Config;
 use tokio::process::Command;
 use tokio::io::AsyncWriteExt;
 use tokio::io::{BufReader, AsyncBufReadExt};
@@ -8,7 +9,7 @@ use tokio::io::Lines;
 use std::str;
 
 /*
- * This is the type, for interracting directly with sandbox
+ * This is the type, for interacting directly with sandbox
  */
 
 pub struct Api {
@@ -18,16 +19,28 @@ pub struct Api {
 
 impl Api {
     pub async fn new(core: u8) -> Self {
+        let settings = Config::builder()
+        // Add in `./Settings.toml`
+        .add_source(config::File::with_name("config"))
+        // Add in settings from the environment (with a prefix of APP)
+        // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
+        .add_source(config::Environment::with_prefix("APP"))
+        .build()
+        .unwrap();
 
-        Command::new("sunwalker_box")
+        let command_path = settings.get::<String>("sunwalker_path").unwrap_or("sunwalker_box".to_string());
+        let root = settings.get::<String>("root").unwrap_or("/".to_string());
+
+
+        Command::new(&command_path)
             .args(&["isolate", "--core", &core.to_string()])
             .spawn()
             .expect("failed to start")
             .wait()
             .await.expect("whoops");
 
-        let mut cmd = Command::new("sunwalker_box");
-        cmd.args(&["start", "--core", &core.to_string()]);
+        let mut cmd = Command::new(&command_path);
+        cmd.args(&["start", "--core", &core.to_string(), "--root", &root]);
 
         cmd.stdout(Stdio::piped());
         cmd.stdin(Stdio::piped());
