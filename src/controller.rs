@@ -34,7 +34,7 @@ pub fn json_to_solution(text: &str, languages: &HashMap<&str, structs::Language>
     
     let mut tests_list: LinkedList<structs::Test> = LinkedList::new();
     for json_test in json["tests"].members() {
-        tests_list.push_back(structs::Test { input: json_test[0].to_string(), output: json_test[0].to_string() })
+        tests_list.push_back(structs::Test { input: json_test[0].to_string(), output: json_test[1].to_string() })
     }
  
     let solution = structs::Solve{
