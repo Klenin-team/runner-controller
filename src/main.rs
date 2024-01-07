@@ -47,19 +47,18 @@ async fn main() {
         }
         while free_cores.is_empty() == false {
             let queue_base_url = queue_base_url.clone();
-            let res = reqwest::get(queue_base_url.to_string() + "/solution").await.expect("Seems like queue unreachable");
+            let res = reqwest::get(queue_base_url.to_string() + "/solution").await;
+            if res.is_err() {
+                break; // Queue is down
+            }
+            let res = res.unwrap();
             if res.status() != 200 {
                 // Seems like the queue is down
                 break;
             }
             let solution_and_id = json_to_solution(res.text().await.expect("").borrow(), &languages);
             if solution_and_id.is_err() {
-                tokio::spawn(async move {
-                    controller::send_back_results(vec![structs::Verdict{ used_time: 0, used_memory: 0, verdict: structs::Verdicts::SE }], 
-                                                  None, None,
-                                                  queue_base_url, 0).await;
-                });
-                break;
+                break; // Queue is empty
             }
             let (id, solution) = solution_and_id.unwrap();
             let available_core = free_cores.pop().unwrap();
