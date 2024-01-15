@@ -40,26 +40,27 @@ impl Tester {
 
         let command = solution.language.execute_command.clone();
 
-        let answer = self.api.run(command, Some(solution.stdio), None, None).await;
+        let answer = self.api.run(command, Some(solution.stdio),
+            Some(solution.time_limit), Some(solution.memory_limit)).await;
         let command_output = self.api.read_file(&output_name).await;
         self.api.reset().await;
 
         if answer["limit_verdict"] == "RealTimeLimitExceeded" {
             return Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
-                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
                 verdict: Verdicts::TL
             }
         } else if answer["limit_verdict"] == "MemoryLimitExceeded" {
             return Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
-                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
                 verdict: Verdicts::ML
             }
         } else if answer["exit_code"] != 0 {
             return Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
-                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
                 verdict: Verdicts::RE
             }
         }
@@ -67,14 +68,14 @@ impl Tester {
         if command_output.trim() != test.output {
             return Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
-                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
                 verdict: Verdicts::WA
             }
         }
 
         Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
-                used_time: answer["cpu_time"].as_u32().unwrap_or(0),
+                used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
                 verdict: Verdicts::OK
             }
     }

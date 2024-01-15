@@ -21,13 +21,15 @@ pub struct Solve {
     pub input_name: String,
     pub output_name: String,
     pub tests: LinkedList<Test>,
-    pub language: Language
+    pub language: Language,
+    pub time_limit: f32,
+    pub memory_limit: u64
 }
 
 #[derive(Debug)]
 pub struct Verdict {
     pub used_memory: u64,
-    pub used_time: u32,
+    pub used_time: f32,
     pub verdict: Verdicts,
 }
 

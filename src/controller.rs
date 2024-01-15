@@ -36,6 +36,9 @@ pub fn json_to_solution(text: &str, languages: &HashMap<&str, structs::Language>
     for json_test in json["tests"].members() {
         tests_list.push_back(structs::Test { input: json_test[0].to_string(), output: json_test[1].to_string() })
     }
+    
+    let memory_limit = json["memory_limit"].as_u64().unwrap_or(134217728);
+    let time_limit = json["time_limit"].as_f32().unwrap_or(10.0);
  
     let solution = structs::Solve{
         code,
@@ -43,7 +46,9 @@ pub fn json_to_solution(text: &str, languages: &HashMap<&str, structs::Language>
         input_name: input_file,
         output_name: output_file,
         tests: tests_list,
-        language: language_as_struct.clone()
+        language: language_as_struct.clone(),
+        time_limit,
+        memory_limit
     };
     Ok((id, solution))
 
@@ -57,7 +62,7 @@ pub async fn run(
     let res = sender.send((solution, resp_tx)).await;
     if res.is_err() {
         tokio::spawn(async move {
-            send_back_results(vec![structs::Verdict{ used_time: 0, used_memory: 0, verdict: structs::Verdicts::SE }],
+            send_back_results(vec![structs::Verdict{ used_time: 0.0, used_memory: 0, verdict: structs::Verdicts::SE }],
                               Some(freed_core_tx), Some(using_core), 
                               queue_base_url, id).await;
         });
@@ -67,7 +72,7 @@ pub async fn run(
         let verdicts = resp_rx.await;
 
         if verdicts.is_err() {
-            send_back_results(vec![structs::Verdict{ used_time: 0, used_memory: 0, verdict: structs::Verdicts::SE }],
+            send_back_results(vec![structs::Verdict{ used_time: 0.0, used_memory: 0, verdict: structs::Verdicts::SE }],
                               Some(freed_core_tx), Some(using_core),
                               queue_base_url, id).await;
             return ();

@@ -17,7 +17,7 @@ pub async fn start_process(core: u8, mut rx: mpsc::Receiver<(structs::Solve, one
             let (ok, file) = tester.compile(&solution).await;
             if ok == false {
                 message.1.send(vec![structs::Verdict { 
-                    used_time: 0,
+                    used_time: 0.0,
                     used_memory: 0,
                     verdict: structs::Verdicts::CE }]).expect("Channel closed");
                 continue;
