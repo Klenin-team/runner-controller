@@ -20,8 +20,12 @@ async fn main() {
         .build()
         .unwrap();
 
-    let run_on_cores = settings.get::<Vec<u8>>("cores").expect("No cores specified in config file");
-    let queue_base_url = settings.get::<String>("queue_base_url").expect("No queue specified in config file");
+    let run_on_cores = settings.get::<Vec<u8>>("cores")
+        .expect("No cores specified in config file");
+    let queue_url = settings.get::<String>("queue_url")
+        .expect("No queue specified in config file");
+    let verdicts_return_url = settings.get::<String>("verdicts_return_url")
+        .expect("No verdicts_return_url specified in config file");
     let queue_poll_interval = settings.get::<u64>("queue_poll_interval").unwrap_or(10);
     let languages = structs::languages::set_languages();
 
@@ -46,8 +50,8 @@ async fn main() {
             freed_core = freed_core_rx.try_recv()
         }
         while free_cores.is_empty() == false {
-            let queue_base_url = queue_base_url.clone();
-            let res = reqwest::get(queue_base_url.to_string() + "/solution").await;
+            let queue_url = queue_url.clone();
+            let res = reqwest::get(queue_url.to_string() + "/solution").await;
             if res.is_err() {
                 break; // Queue is down
             }
@@ -64,7 +68,7 @@ async fn main() {
             let available_core = free_cores.pop().unwrap();
             controller::run(
                 senders.get(&available_core).unwrap(), solution, freed_core_tx.clone(), 
-                available_core, queue_base_url, id
+                available_core, verdicts_return_url.clone(), id
             ).await;
         }
         sleep(Duration::from_secs(queue_poll_interval)).await;

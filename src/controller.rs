@@ -57,14 +57,14 @@ pub fn json_to_solution(text: &str, languages: &HashMap<&str, structs::Language>
 pub async fn run(
         sender: &mpsc::Sender<(structs::Solve, oneshot::Sender<Vec<structs::Verdict>>)>, 
         solution: structs::Solve, freed_core_tx: mpsc::Sender<u8>, using_core: u8,
-        queue_base_url: String, id: u128) {
+        verdicts_return_url: String, id: u128) {
     let (resp_tx, resp_rx) = oneshot::channel();
     let res = sender.send((solution, resp_tx)).await;
     if res.is_err() {
         tokio::spawn(async move {
             send_back_results(vec![structs::Verdict{ used_time: 0.0, used_memory: 0, verdict: structs::Verdicts::SE }],
                               Some(freed_core_tx), Some(using_core), 
-                              queue_base_url, id).await;
+                              verdicts_return_url, id).await;
         });
         return ();
     }
@@ -74,17 +74,17 @@ pub async fn run(
         if verdicts.is_err() {
             send_back_results(vec![structs::Verdict{ used_time: 0.0, used_memory: 0, verdict: structs::Verdicts::SE }],
                               Some(freed_core_tx), Some(using_core),
-                              queue_base_url, id).await;
+                              verdicts_return_url, id).await;
             return ();
         }
         send_back_results(verdicts.unwrap(), Some(freed_core_tx), Some(using_core),
-                          queue_base_url, id).await
+                          verdicts_return_url, id).await
     });
 }
 
 pub async fn send_back_results(verdicts: Vec<structs::Verdict>,
                                freed_core_tx: Option<mpsc::Sender<u8>>, using_core: Option<u8>,
-                               queue_base_url: String, id: u128) {
+                               verdicts_return_url: String, id: u128) {
     if freed_core_tx.is_some() && using_core.is_some() {
         freed_core_tx.unwrap().send(using_core.unwrap()).await.expect("This core not gonna be used((");
     }
@@ -112,7 +112,7 @@ pub async fn send_back_results(verdicts: Vec<structs::Verdict>,
     };
 
     let client = reqwest::Client::new();
-    client.post(queue_base_url.to_string() + "/solution/checked")
+    client.post(verdicts_return_url.to_string())
         .body(form.dump())
         .header("Content-Type", "application/json")
         .send()
