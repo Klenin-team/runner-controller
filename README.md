@@ -37,14 +37,15 @@ languages.insert("{key}", Language {
 
 ### 👥 [Queue service](https://github.com/Klenin-team/queue-service) location
 Queue service location is configured through [config.yaml](config.yaml)
-- `queue_base_url` -- url of your queue service instance **(required)**
+- `queue_url` -- url of your queue service instance **(required)**
+- `verdicts_return_url` -- url, where verdicts should be send **(required)** 
 - `queue_poll_interval` -- how many seconds to wait between requests to queue (default is 10)
 ### 💽 Available cores
 Which CPU cores should be used for testing. This cores will be isolated
 - `cores` -- list of numbers of CPU cores (indexing starts from 0) **(required)**
 ### 🗂 Sunbox location and chroot
-- `sunwalker_path` -- path to your compiled sunwalker file
-- `root` -- path to directory, that will be root for sandbox (probably chroot with installed languages from [language list](#language-list))
+- `sunwalker_path` -- path to your compiled sunwalker file (default value is `sunwalker_box`, that means, that sunwalker_box added to path)
+- `root` -- path to directory, that will be root for sandbox (probably chroot with installed languages from [language list](#language-list)) (default `/`)
 
 
 ## 🏃 Running
