@@ -62,7 +62,9 @@ pub async fn run(
     let res = sender.send((solution, resp_tx)).await;
     if res.is_err() {
         tokio::spawn(async move {
-            send_back_results(vec![structs::Verdict{ used_time: 0.0, used_memory: 0, verdict: structs::Verdicts::SE }],
+            send_back_results(vec![structs::Verdict{ used_time: 0.0, used_memory: 0, 
+                               compilation_output: "".to_string(), program_output: "".to_string(),
+                               verdict: structs::Verdicts::SE }],
                               Some(freed_core_tx), Some(using_core), 
                               verdicts_return_url, id).await;
         });
@@ -72,7 +74,9 @@ pub async fn run(
         let verdicts = resp_rx.await;
 
         if verdicts.is_err() {
-            send_back_results(vec![structs::Verdict{ used_time: 0.0, used_memory: 0, verdict: structs::Verdicts::SE }],
+            send_back_results(vec![structs::Verdict{ used_time: 0.0, used_memory: 0, 
+                              compilation_output: "".to_string(), program_output: "".to_string(),
+                              verdict: structs::Verdicts::SE }],
                               Some(freed_core_tx), Some(using_core),
                               verdicts_return_url, id).await;
             return ();
@@ -92,8 +96,10 @@ pub async fn send_back_results(verdicts: Vec<structs::Verdict>,
     let mut string_verdicts = Vec::new();
     for verdict in verdicts {
         string_verdicts.push(object! {
-            used_memory: verdict.used_memory,
+            used_ram: verdict.used_memory,
             used_time: verdict.used_time,
+            compilation_output: verdict.program_output, 
+            program_output: verdict.compilation_output,
             verdict: match verdict.verdict {
                 structs::Verdicts::OK => "OK",
                 structs::Verdicts::RE => "RE",

@@ -49,18 +49,24 @@ impl Tester {
             return Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
                 used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
+                compilation_output: "".to_string(), 
+                program_output: "".to_string(),
                 verdict: Verdicts::TL
             }
         } else if answer["limit_verdict"] == "MemoryLimitExceeded" {
             return Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
                 used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
+                compilation_output: "".to_string(), 
+                program_output: "".to_string(),
                 verdict: Verdicts::ML
             }
         } else if answer["exit_code"] != 0 {
             return Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
                 used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
+                compilation_output: "".to_string(), 
+                program_output: "".to_string(),
                 verdict: Verdicts::RE
             }
         }
@@ -69,6 +75,8 @@ impl Tester {
             return Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
                 used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
+                compilation_output: "".to_string(), 
+                program_output: command_output.trim().to_string(),
                 verdict: Verdicts::WA
             }
         }
@@ -76,6 +84,8 @@ impl Tester {
         Verdict { 
                 used_memory: answer["memory"].as_u64().unwrap_or(0),
                 used_time: answer["cpu_time"].as_f32().unwrap_or(0.0),
+                compilation_output: "".to_string(), 
+                program_output: command_output.trim().to_string(),
                 verdict: Verdicts::OK
             }
     }

@@ -30,7 +30,9 @@ pub struct Solve {
 pub struct Verdict {
     pub used_memory: u64,
     pub used_time: f32,
-    pub verdict: Verdicts,
+    pub compilation_output: String,
+    pub program_output: String,
+    pub verdict: Verdicts
 }
 
 #[derive(Debug)]
