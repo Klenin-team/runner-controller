@@ -27,9 +27,9 @@ pub fn json_to_solution(text: &str, languages: &HashMap<&str, structs::Language>
     }
     let language_as_struct = language_as_struct.unwrap();
     
-    let use_stdio = json["stdio"].as_bool().unwrap_or(true);
     let input_file = json["input_file"].to_string();
     let output_file = json["output_file"].to_string();
+    let use_stdio = json["stdio"].as_bool().unwrap_or(true) || input_file == "STDIN";
  
     
     let mut tests_list: LinkedList<structs::Test> = LinkedList::new();
